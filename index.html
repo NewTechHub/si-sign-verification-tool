@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>SI-SIGN Verification Tool</title>
+<link rel="icon" href="./img/favicon.png">
+<link rel="stylesheet" href="./css/bootstrap.min.css">
+<link rel="stylesheet" href="./css/bootstrap-select.min.css">
+<link rel="stylesheet" href="./css/verification-tool.css">
+<script src="./js/jquery.min.js"></script>
+<script src="./js/popper.min.js"></script>
+<script src="./js/bootstrap.min.js"></script>
+<script src="./js/bootstrap-select.min.js"></script>
+<script src="./js/pdf.min.js"></script>
+<script src="./js/sis.crypto.js"></script>
+<script src="./js/sis.metadata.js"></script>
+<script src="./js/verification-tool.js"></script>
+</head>
+<body>
+
+<div id="create-file-hash" class="modal" tabindex="-1" role="dialog">
+<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+<div class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title">Calculate File Hash</h5>
+<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+<span aria-hidden="true">&times;</span>
+</button>
+</div>
+<div class="modal-body">
+<form>
+<div class="form-group">
+<label for="create-file-hash-file">Select file to calculate hash</label>
+<input type="file" class="form-control" id="create-file-hash-file">
+</div>
+<div class="alert alert-secondary container" role="alert">
+<div class="form-group row">
+<label for="create-file-hash-hash" class="col col-form-label">Hash</label>
+<div class="col-sm-10 input-group">
+<input type="text" class="form-control" id="create-file-hash-hash" readonly autocomplete="off">
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" id="create-file-hash-copy">Copy</button>
+</div>
+</div>
+</div>
+</div>
+</form>
+</div>
+<div class="modal-footer">
+<button type="button" id="create-file-hash-calculate" class="btn btn-primary">Calculate</button>
+</div>
+</div>
+</div>
+</div>
+
+<div id="verify-file" class="modal" tabindex="-1" role="dialog">
+<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+<div class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title">Verify Report File</h5>
+<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+<span aria-hidden="true">&times;</span>
+</button>
+</div>
+<div class="modal-body">
+<form>
+<div class="form-group">
+<label for="verify-file-file">Select report file to verify</label>
+<input type="file" class="form-control" id="verify-file-file">
+</div>
+</form>
+</div>
+<div class="modal-footer">
+<button type="button" id="verify-file-load" class="btn btn-primary">Load</button>
+</div>
+</div>
+</div>
+</div>
+
+<div id="verify-folder-creation" class="modal" tabindex="-1" role="dialog">
+<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+<div class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title">Folder | Creation Event</h5>
+<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+<span aria-hidden="true">&times;</span>
+</button>
+</div>
+<div class="modal-body">
+
+<form>
+<div class="form-group row">
+<label for="verify-folder-creation-operation" class="col col-form-label">Operation identifier</label>
+<div class="col-sm-9 input-group">
+<input type="text" class="form-control" id="verify-folder-creation-operation" value="4" readonly>
+</div>
+</div>
+<div class="form-group row">
+<label for="verify-folder-creation-invoker" class="col-sm col-form-label">Invoker identifier</label>
+<div class="col-sm-9 input-group">
+<input type="text" class="form-control" id="verify-folder-creation-invoker">
+<input type="text" class="form-control" id="verify-folder-creation-invoker-preview" readonly>
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-folder-creation-invoker">Reset</button>
+<button type="button" class="btn btn-outline-secondary" data-toggle-target="#verify-folder-creation-invoker"><span>👁</span></button>
+</div>
+</div>
+</div>
+<div class="hash-fields">
+<div class="form-group row">
+<label for="verify-folder-creation-key" class="col col-form-label">Hash key</label>
+<div class="col-sm-9 input-group">
+<input type="text" class="form-control" id="verify-folder-creation-key">
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-folder-creation-key">Reset</button>
+</div>
+</div>
+</div>
+<div class="form-group row">
+<label for="verify-folder-creation-name" class="col-sm col-form-label">Folder name</label>
+<div class="col-sm-9 input-group">
+<input type="text" class="form-control" id="verify-folder-creation-name">
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-folder-creation-name">Reset</button>
+</div>
+</div>
+</div>
+<div class="form-group row">
+<label for="verify-folder-creation-deadline" class="col-sm col-form-label">Deadline</label>
+<div class="col-sm-9 input-group">
+<input type="datetime" class="form-control" id="verify-folder-creation-deadline">
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-folder-creation-deadline">Reset</button>
+</div>
+</div>
+</div>
+<hr>
+<div class="form-group row">
+<label for="verify-folder-creation-files-new" class="col col-form-label">Files</label>
+<div class="col-sm-8 input-group">
+<div class="input-group-prepend">
+<label for="verify-folder-creation-files-upload" class="btn btn-outline-secondary" style="margin: 0;">Upload</label>
+<input type="file" id="verify-folder-creation-files-upload" style="display: none;">
+</div>
+<input type="text" class="form-control" id="verify-folder-creation-files-new" autocomplete="off">
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" id="verify-folder-creation-files-add">Add</button>
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-folder-creation-files">Reset</button>
+</div>
+</div>
+</div>
+<div id="verify-folder-creation-files" class="form-group row item-list"></div>
+<hr>
+<div class="form-group row">
+<label for="verify-folder-creation-voters-new" class="col col-form-label">Voters</label>
+<div class="col-sm-8 input-group">
+<input type="text" class="form-control" id="verify-folder-creation-voters-new" autocomplete="off">
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" id="verify-folder-creation-voters-add">Add</button>
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-folder-creation-voters">Reset</button>
+</div>
+</div>
+</div>
+<div id="verify-folder-creation-voters" class="form-group row item-list"></div>
+<hr>
+<div class="form-group row">
+<label for="verify-folder-creation-administrators-new" class="col col-form-label">Administrators</label>
+<div class="col-sm-8 input-group">
+<input type="text" class="form-control" id="verify-folder-creation-administrators-new" autocomplete="off">
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" id="verify-folder-creation-administrators-add">Add</button>
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-folder-creation-administrators">Reset</button>
+</div>
+</div>
+</div>
+<div id="verify-folder-creation-administrators" class="form-group row item-list"></div>
+</div>
+<div class="alert alert-secondary container" role="alert">
+<div class="form-group row">
+<label for="verify-folder-creation-result-actual" class="col col-form-label">Calculated</label>
+<div class="col-sm-10 input-group">
+<input type="text" class="form-control" id="verify-folder-creation-result-actual" autocomplete="off">
+</div>
+</div>
+<div class="form-group row">
+<div class="col-sm"></div>
+<div class="col-sm-10 text-center">
+<strong id="verify-folder-creation-result-indicator">=</strong>
+</div>
+</div>
+<div class="form-group row">
+<label for="verify-folder-creation-result-expected" class="col col-form-label">Expected</label>
+<div class="col-sm-10 input-group">
+<input type="text" class="form-control" id="verify-folder-creation-result-expected" readonly autocomplete="off">
+</div>
+</div>
+<div class="from-group row">
+<div class="col-sm text-center">
+<button type="button" class="btn btn-primary btn-lg">Verify</button>
+</div>
+</div>
+</div>
+</form>
+
+</div>
+</div>
+</div>
+</div>
+
+<div id="verify-folder-accepting" class="modal" tabindex="-1" role="dialog">
+<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+<div class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title">Folder | Accepting Event</h5>
+<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+<span aria-hidden="true">&times;</span>
+</button>
+</div>
+<div class="modal-body">
+
+<form>
+<div class="form-group row">
+<label for="verify-folder-accepting-operation" class="col col-form-label">Operation identifier</label>
+<div class="col-sm-9 input-group">
+<input type="text" class="form-control" id="verify-folder-accepting-operation" value="6" readonly>
+</div>
+</div>
+<div class="form-group row">
+<label for="verify-folder-accepting-invoker" class="col-sm col-form-label">Invoker identifier</label>
+<div class="col-sm-9 input-group">
+<input type="text" class="form-control" id="verify-folder-accepting-invoker">
+<input type="text" class="form-control" id="verify-folder-accepting-invoker-preview" readonly>
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-folder-accepting-invoker">Reset</button>
+<button type="button" class="btn btn-outline-secondary" data-toggle-target="#verify-folder-accepting-invoker"><span>👁</span></button>
+</div>
+</div>
+</div>
+<div class="form-group row">
+<label for="verify-folder-accepting-id" class="col-sm col-form-label">Folder identifier</label>
+<div class="col-sm-9 input-group">
+<input type="text" class="form-control" id="verify-folder-accepting-id">
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-folder-accepting-id">Reset</button>
+</div>
+</div>
+</div>
+<div class="form-group row">
+<label for="verify-folder-accepting-vote" class="col col-form-label">Vote</label>
+<div class="col-sm-9 input-group">
+<select class="form-control" id="verify-folder-accepting-vote">
+<option value="in-favour">In Favour</option>
+<option value="against">Against</option>
+</select>
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-folder-accepting-vote">Reset</button>
+</div>
+</div>
+</div>
+<div class="alert alert-secondary container" role="alert">
+<div class="form-group row">
+<label for="verify-folder-accepting-result-actual" class="col col-form-label">Calculated</label>
+<div class="col-sm-10 input-group">
+<input type="text" class="form-control" id="verify-folder-accepting-result-actual" autocomplete="off">
+</div>
+</div>
+<div class="form-group row">
+<div class="col-sm"></div>
+<div class="col-sm-10 text-center">
+<strong id="verify-folder-accepting-result-indicator">=</strong>
+</div>
+</div>
+<div class="form-group row">
+<label for="verify-folder-accepting-result-expected" class="col col-form-label">Expected</label>
+<div class="col-sm-10 input-group">
+<input type="text" class="form-control" id="verify-folder-accepting-result-expected" readonly autocomplete="off">
+</div>
+</div>
+<div class="from-group row">
+<div class="col-sm text-center">
+<button type="button" class="btn btn-primary btn-lg">Verify</button>
+</div>
+</div>
+</div>
+</form>
+
+</div>
+</div>
+</div>
+</div>
+
+<div id="verify-folder-archiving" class="modal" tabindex="-1" role="dialog">
+<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+<div class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title">Folders | Archiving Event</h5>
+<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+<span aria-hidden="true">&times;</span>
+</button>
+</div>
+<div class="modal-body">
+
+<form>
+<div class="form-group row">
+<label for="verify-folder-archiving-operation" class="col col-form-label">Operation identifier</label>
+<div class="col-sm-9 input-group">
+<input type="text" class="form-control" id="verify-folder-archiving-operation" value="5" readonly>
+</div>
+</div>
+<div class="form-group row">
+<label for="verify-folder-archiving-invoker" class="col-sm col-form-label">Invoker identifier</label>
+<div class="col-sm-9 input-group">
+<input type="text" class="form-control" id="verify-folder-archiving-invoker">
+<input type="text" class="form-control" id="verify-folder-archiving-invoker-preview" readonly>
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-folder-archiving-invoker">Reset</button>
+<button type="button" class="btn btn-outline-secondary" data-toggle-target="#verify-folder-archiving-invoker"><span>👁</span></button>
+</div>
+</div>
+</div>
+<hr>
+<div class="form-group row">
+<label for="verify-folder-archiving-folders-new" class="col col-form-label">Folders</label>
+<div class="col-sm-8 input-group">
+<input type="text" class="form-control" id="verify-folder-archiving-folders-new" autocomplete="off">
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" id="verify-folder-archiving-folders-add">Add</button>
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-folder-archiving-folders">Reset</button>
+</div>
+</div>
+</div>
+<div id="verify-folder-archiving-folders" class="form-group row item-list"></div>
+<div class="alert alert-secondary container" role="alert">
+<div class="form-group row">
+<label for="verify-folder-archiving-result-actual" class="col col-form-label">Calculated</label>
+<div class="col-sm-10 input-group">
+<input type="text" class="form-control" id="verify-folder-archiving-result-actual" autocomplete="off">
+</div>
+</div>
+<div class="form-group row">
+<div class="col-sm"></div>
+<div class="col-sm-10 text-center">
+<strong id="verify-folder-archiving-result-indicator">=</strong>
+</div>
+</div>
+<div class="form-group row">
+<label for="verify-folder-archiving-result-expected" class="col col-form-label">Expected</label>
+<div class="col-sm-10 input-group">
+<input type="text" class="form-control" id="verify-folder-archiving-result-expected" readonly autocomplete="off">
+</div>
+</div>
+<div class="from-group row">
+<div class="col-sm text-center">
+<button type="button" class="btn btn-primary btn-lg">Verify</button>
+</div>
+</div>
+</div>
+</form>
+
+</div>
+</div>
+</div>
+</div>
+
+<div id="verify-voting-creation" class="modal" tabindex="-1" role="dialog">
+<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+<div class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title">Voting | Creation Event</h5>
+<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+<span aria-hidden="true">&times;</span>
+</button>
+</div>
+<div class="modal-body">
+
+<form>
+<div class="form-group row">
+<label for="verify-voting-creation-operation" class="col col-form-label">Operation identifier</label>
+<div class="col-sm-9 input-group">
+<input type="text" class="form-control" id="verify-voting-creation-operation" value="8" readonly>
+</div>
+</div>
+<div class="form-group row">
+<label for="verify-voting-creation-invoker" class="col-sm col-form-label">Invoker identifier</label>
+<div class="col-sm-9 input-group">
+<input type="text" class="form-control" id="verify-voting-creation-invoker">
+<input type="text" class="form-control" id="verify-voting-creation-invoker-preview" readonly>
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-voting-creation-invoker">Reset</button>
+<button type="button" class="btn btn-outline-secondary" data-toggle-target="#verify-voting-creation-invoker"><span>👁</span></button>
+</div>
+</div>
+</div>
+<div class="hash-fields">
+<div class="form-group row">
+<label for="verify-voting-creation-key" class="col col-form-label">Hash key</label>
+<div class="col-sm-9 input-group">
+<input type="text" class="form-control" id="verify-voting-creation-key">
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-voting-creation-key">Reset</button>
+</div>
+</div>
+</div>
+<div class="form-group row">
+<label for="verify-voting-creation-proceedings" class="col-sm col-form-label">Proceedings identifier</label>
+<div class="col-sm-9 input-group">
+<input type="text" class="form-control" id="verify-voting-creation-proceedings">
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-voting-creation-proceedings">Reset</button>
+</div>
+</div>
+</div>
+<div class="form-group row">
+<label for="verify-voting-creation-name" class="col-sm col-form-label">Voting name</label>
+<div class="col-sm-9 input-group">
+<input type="text" class="form-control" id="verify-voting-creation-name">
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-voting-creation-name">Reset</button>
+</div>
+</div>
+</div>
+<hr>
+<div class="form-group row">
+<label for="verify-voting-creation-files-new" class="col col-form-label">Files</label>
+<div class="col-sm-8 input-group">
+<div class="input-group-prepend">
+<label for="verify-voting-creation-files-upload" class="btn btn-outline-secondary" style="margin: 0;">Upload</label>
+<input type="file" id="verify-voting-creation-files-upload" style="display: none;">
+</div>
+<input type="text" class="form-control" id="verify-voting-creation-files-new" autocomplete="off">
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" id="verify-voting-creation-files-add">Add</button>
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-voting-creation-files">Reset</button>
+</div>
+</div>
+</div>
+<div id="verify-voting-creation-files" class="form-group row item-list"></div>
+<hr>
+<div class="form-group row">
+<label for="verify-voting-creation-voters-new" class="col col-form-label">Voters</label>
+<div class="col-sm-8 input-group">
+<input type="text" class="form-control" id="verify-voting-creation-voters-new" autocomplete="off">
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" id="verify-voting-creation-voters-add">Add</button>
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-voting-creation-voters">Reset</button>
+</div>
+</div>
+</div>
+<div id="verify-voting-creation-voters" class="form-group row item-list"></div>
+</div>
+<div class="alert alert-secondary container" role="alert">
+<div class="form-group row">
+<label for="verify-voting-creation-result-actual" class="col col-form-label">Calculated</label>
+<div class="col-sm-10 input-group">
+<input type="text" class="form-control" id="verify-voting-creation-result-actual" autocomplete="off">
+</div>
+</div>
+<div class="form-group row">
+<div class="col-sm"></div>
+<div class="col-sm-10 text-center">
+<strong id="verify-voting-creation-result-indicator">=</strong>
+</div>
+</div>
+<div class="form-group row">
+<label for="verify-voting-creation-result-expected" class="col col-form-label">Expected</label>
+<div class="col-sm-10 input-group">
+<input type="text" class="form-control" id="verify-voting-creation-result-expected" readonly autocomplete="off">
+</div>
+</div>
+<div class="from-group row">
+<div class="col-sm text-center">
+<button type="button" class="btn btn-primary btn-lg">Verify</button>
+</div>
+</div>
+</div>
+</form>
+
+</div>
+</div>
+</div>
+</div>
+
+<div id="verify-voting-voteCasting" class="modal" tabindex="-1" role="dialog">
+<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+<div class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title">Voting | Vote Casting Event</h5>
+<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+<span aria-hidden="true">&times;</span>
+</button>
+</div>
+<div class="modal-body">
+
+<form>
+<div class="form-group row">
+<label for="verify-voting-voteCasting-operation" class="col col-form-label">Operation identifier</label>
+<div class="col-sm-9 input-group">
+<input type="text" class="form-control" id="verify-voting-voteCasting-operation" value="9" readonly>
+</div>
+</div>
+<div class="form-group row">
+<label for="verify-voting-voteCasting-invoker" class="col-sm col-form-label">Invoker identifier</label>
+<div class="col-sm-9 input-group">
+<input type="text" class="form-control" id="verify-voting-voteCasting-invoker">
+<input type="text" class="form-control" id="verify-voting-voteCasting-invoker-preview" readonly>
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-voting-voteCasting-invoker">Reset</button>
+<button type="button" class="btn btn-outline-secondary" data-toggle-target="#verify-voting-voteCasting-invoker"><span>👁</span></button>
+</div>
+</div>
+</div>
+<div class="hash-fields">
+<div class="form-group row">
+<label for="verify-voting-voteCasting-key" class="col col-form-label">Hash key</label>
+<div class="col-sm-9 input-group">
+<input type="text" class="form-control" id="verify-voting-voteCasting-key">
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-voting-voteCasting-key">Reset</button>
+</div>
+</div>
+</div>
+<div class="form-group row">
+<label for="verify-voting-voteCasting-id" class="col-sm col-form-label">Voting identifier</label>
+<div class="col-sm-9 input-group">
+<input type="text" class="form-control" id="verify-voting-voteCasting-id">
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-voting-voteCasting-id">Reset</button>
+</div>
+</div>
+</div>
+<hr>
+<div class="form-group row">
+<div class="col col-form-label">Vote values</div>
+</div>
+<table class="table">
+<thead>
+<tr>
+<th></th>
+<th>In Favour</th>
+<th>Abstain</th>
+<th>Against</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>Common</th>
+<td>
+<div class="input-group">
+<input type="text" class="form-control" id="verify-voting-voteCasting-inFavourCommon">
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-voting-voteCasting-inFavourCommon">Reset</button>
+</div>
+</div>
+</td>
+<td>
+<div class="input-group">
+<input type="text" class="form-control" id="verify-voting-voteCasting-abstainCommon">
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-voting-voteCasting-abstainCommon">Reset</button>
+</div>
+</div>
+</td>
+<td>
+<div class="input-group">
+<input type="text" class="form-control" id="verify-voting-voteCasting-againstCommon">
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-voting-voteCasting-againstCommon">Reset</button>
+</div>
+</div>
+</td>
+</tr>
+<tr>
+<th>Preferred</th>
+<td>
+<div class="input-group">
+<input type="text" class="form-control" id="verify-voting-voteCasting-inFavourPreferred">
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-voting-voteCasting-inFavourPreferred">Reset</button>
+</div>
+</div>
+</td>
+<td>
+<div class="input-group">
+<input type="text" class="form-control" id="verify-voting-voteCasting-abstainPreferred">
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-voting-voteCasting-abstainPreferred">Reset</button>
+</div>
+</div>
+</td>
+<td>
+<div class="input-group">
+<input type="text" class="form-control" id="verify-voting-voteCasting-againstPreferred">
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-voting-voteCasting-againstPreferred">Reset</button>
+</div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<div class="form-group row">
+<label for="verify-voting-voteCasting-amount" class="col-sm col-form-label">Votes amount</label>
+<div class="col-sm-9 input-group">
+<input type="text" class="form-control" id="verify-voting-voteCasting-amount">
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-voting-voteCasting-amount">Reset</button>
+</div>
+</div>
+</div>
+<div class="form-group row">
+<label for="verify-voting-voteCasting-vote" class="col col-form-label">Vote type</label>
+<div class="col-sm-9 input-group">
+<select class="form-control" id="verify-voting-voteCasting-vote">
+<option value="in-favour">In Favour</option>
+<option value="abstain">Abstain</option>
+<option value="against">Against</option>
+<option value="splitted">Splitted</option>
+</select>
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-voting-voteCasting-vote">Reset</button>
+</div>
+</div>
+</div>
+</div>
+<div class="alert alert-secondary container" role="alert">
+<div class="form-group row">
+<label for="verify-voting-voteCasting-result-actual" class="col col-form-label">Calculated</label>
+<div class="col-sm-10 input-group">
+<input type="text" class="form-control" id="verify-voting-voteCasting-result-actual" autocomplete="off">
+</div>
+</div>
+<div class="form-group row">
+<div class="col-sm"></div>
+<div class="col-sm-10 text-center">
+<strong id="verify-voting-voteCasting-result-indicator">=</strong>
+</div>
+</div>
+<div class="form-group row">
+<label for="verify-voting-voteCasting-result-expected" class="col col-form-label">Expected</label>
+<div class="col-sm-10 input-group">
+<input type="text" class="form-control" id="verify-voting-voteCasting-result-expected" readonly autocomplete="off">
+</div>
+</div>
+<div class="from-group row">
+<div class="col-sm text-center">
+<button type="button" class="btn btn-primary btn-lg">Verify</button>
+</div>
+</div>
+</div>
+</form>
+
+</div>
+</div>
+</div>
+</div>
+
+<div id="verify-voting-cancellation" class="modal" tabindex="-1" role="dialog">
+<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+<div class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title">Voting | Cancellation Event</h5>
+<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+<span aria-hidden="true">&times;</span>
+</button>
+</div>
+<div class="modal-body">
+
+<form>
+<div class="form-group row">
+<label for="verify-voting-cancellation-operation" class="col col-form-label">Operation identifier</label>
+<div class="col-sm-9 input-group">
+<input type="text" class="form-control" id="verify-voting-cancellation-operation" value="B" readonly>
+</div>
+</div>
+<div class="form-group row">
+<label for="verify-voting-cancellation-invoker" class="col-sm col-form-label">Invoker identifier</label>
+<div class="col-sm-9 input-group">
+<input type="text" class="form-control" id="verify-voting-cancellation-invoker">
+<input type="text" class="form-control" id="verify-voting-cancellation-invoker-preview" readonly>
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-voting-cancellation-invoker">Reset</button>
+<button type="button" class="btn btn-outline-secondary" data-toggle-target="#verify-voting-cancellation-invoker"><span>👁</span></button>
+</div>
+</div>
+</div>
+<div class="form-group row">
+<label for="verify-voting-cancellation-id" class="col-sm col-form-label">Voting identifier</label>
+<div class="col-sm-9 input-group">
+<input type="text" class="form-control" id="verify-voting-cancellation-id">
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-voting-cancellation-id">Reset</button>
+</div>
+</div>
+</div>
+<div class="alert alert-secondary container" role="alert">
+<div class="form-group row">
+<label for="verify-voting-cancellation-result-actual" class="col col-form-label">Calculated</label>
+<div class="col-sm-10 input-group">
+<input type="text" class="form-control" id="verify-voting-cancellation-result-actual" autocomplete="off">
+</div>
+</div>
+<div class="form-group row">
+<div class="col-sm"></div>
+<div class="col-sm-10 text-center">
+<strong id="verify-voting-cancellation-result-indicator">=</strong>
+</div>
+</div>
+<div class="form-group row">
+<label for="verify-voting-cancellation-result-expected" class="col col-form-label">Expected</label>
+<div class="col-sm-10 input-group">
+<input type="text" class="form-control" id="verify-voting-cancellation-result-expected" readonly autocomplete="off">
+</div>
+</div>
+<div class="from-group row">
+<div class="col-sm text-center">
+<button type="button" class="btn btn-primary btn-lg">Verify</button>
+</div>
+</div>
+</div>
+</form>
+
+</div>
+</div>
+</div>
+</div>
+
+<div id="verify-voting-forcedClosing" class="modal" tabindex="-1" role="dialog">
+<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+<div class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title">Voting | Forced Closing Event</h5>
+<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+<span aria-hidden="true">&times;</span>
+</button>
+</div>
+<div class="modal-body">
+
+<form>
+<div class="form-group row">
+<label for="verify-voting-forcedClosing-operation" class="col col-form-label">Operation identifier</label>
+<div class="col-sm-9 input-group">
+<input type="text" class="form-control" id="verify-voting-forcedClosing-operation" value="E" readonly>
+</div>
+</div>
+<div class="form-group row">
+<label for="verify-voting-forcedClosing-invoker" class="col-sm col-form-label">Invoker identifier</label>
+<div class="col-sm-9 input-group">
+<input type="text" class="form-control" id="verify-voting-forcedClosing-invoker">
+<input type="text" class="form-control" id="verify-voting-forcedClosing-invoker-preview" readonly>
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-voting-forcedClosing-invoker">Reset</button>
+<button type="button" class="btn btn-outline-secondary" data-toggle-target="#verify-voting-forcedClosing-invoker"><span>👁</span></button>
+</div>
+</div>
+</div>
+<div class="form-group row">
+<label for="verify-voting-forcedClosing-id" class="col-sm col-form-label">Voting identifier</label>
+<div class="col-sm-9 input-group">
+<input type="text" class="form-control" id="verify-voting-forcedClosing-id">
+<div class="input-group-append">
+<button type="button" class="btn btn-outline-secondary" data-reset-target="#verify-voting-forcedClosing-id">Reset</button>
+</div>
+</div>
+</div>
+<div class="alert alert-secondary container" role="alert">
+<div class="form-group row">
+<label for="verify-voting-forcedClosing-result-actual" class="col col-form-label">Calculated</label>
+<div class="col-sm-10 input-group">
+<input type="text" class="form-control" id="verify-voting-forcedClosing-result-actual" autocomplete="off">
+</div>
+</div>
+<div class="form-group row">
+<div class="col-sm"></div>
+<div class="col-sm-10 text-center">
+<strong id="verify-voting-forcedClosing-result-indicator">=</strong>
+</div>
+</div>
+<div class="form-group row">
+<label for="verify-voting-forcedClosing-result-expected" class="col col-form-label">Expected</label>
+<div class="col-sm-10 input-group">
+<input type="text" class="form-control" id="verify-voting-forcedClosing-result-expected" readonly autocomplete="off">
+</div>
+</div>
+<div class="from-group row">
+<div class="col-sm text-center">
+<button type="button" class="btn btn-primary btn-lg">Verify</button>
+</div>
+</div>
+</div>
+</form>
+
+</div>
+</div>
+</div>
+</div>
+
+<header class="header">
+<h1 class="container navbar">
+<div class="row">
+<img src="./img/si-sign-logo.png" alt="SI-SIGN" class="link-home">
+<span class="divider"></span>
+<a href="#" class="navbar-brand link-home">Verification Tool</a>
+</div>
+</h1>
+</header>
+
+<main role="main" class="container">
+
+<div id="welcome-page">
+
+<div id="banner" class="container-fluid">
+<div class="row">
+<div class="col-md-2"></div>
+<div class="col-md-6">Welcome to SI-SIGN Verification Tool</div>
+<div class="col-md-2 align-middle"><img src="./img/banner.png" alt=""></div>
+<div class="col-md-2"></div>
+</div>
+</div>
+
+<h2>Please select a verification action to perform:</h2>
+<div id="actions" class="container-fluid">
+<div class="row">
+<div class="col-md-3">
+<button type="button" class="btn btn-primary btn-lg btn-block" data-toggle="modal" data-target="#verify-file"><strong>Report File</strong></button>
+</div>
+<div class="col-md-9">
+<div class="row">
+<div class="col-md-4">
+<button type="button" class="btn btn-secondary btn-lg btn-block" data-toggle="modal" data-target="#verify-folder-creation"><strong>Folder Creation</strong></button>
+</div>
+<div class="col-md-4">
+<button type="button" class="btn btn-secondary btn-lg btn-block" data-toggle="modal" data-target="#verify-folder-accepting"><strong>Folder Accepting</strong></button>
+</div>
+<div class="col-md-4">
+<button type="button" class="btn btn-secondary btn-lg btn-block" data-toggle="modal" data-target="#verify-folder-archiving"><strong>Folders Archiving</strong></button>
+</div>
+</div>
+<div class="row">
+<div class="col-md-4">
+<button type="button" class="btn btn-secondary btn-lg btn-block" data-toggle="modal" data-target="#verify-voting-creation"><strong>Voting Creation</strong></button>
+</div>
+<div class="col-md-4">
+<button type="button" class="btn btn-secondary btn-lg btn-block" data-toggle="modal" data-target="#verify-voting-voteCasting"><strong>Voting Vote Casting</strong></button>
+</div>
+<div class="col-md-4">
+<button type="button" class="btn btn-secondary btn-lg btn-block" data-toggle="modal" data-target="#verify-voting-cancellation"><strong>Voting Cancellation</strong></button>
+</div>
+<div class="col-md-4">
+<button type="button" class="btn btn-secondary btn-lg btn-block" data-toggle="modal" data-target="#verify-voting-forcedClosing"><strong>Voting Forced Closing</strong></button>
+</div>
+</div>
+<div class="row">
+<div class="col-md-4">
+<hr>
+<button type="button" class="btn btn-secondary btn-lg btn-block btn-other" data-toggle="modal" data-target="#create-file-hash"><strong>Calculate File Hash</strong></button>
+</div>
+<div class="col-md-8"></div>
+</div>
+</div>
+</div>
+</div>
+
+</div>
+
+<div id="verification-page" style="display: none;">
+
+<h2>Summary</h2>
+
+<table class="table">
+<tbody>
+<tr>
+<td>Filename</td>
+<td><strong id="verification-page-filename"></strong> <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#verify-file">Load</button></td>
+</tr>
+<tr>
+<td>Type</td>
+<td><strong id="verification-page-type"></strong></td>
+</tr>
+<tr>
+<td>Name</td>
+<td><strong id="verification-page-name"></strong></td>
+</tr>
+<tr>
+<td>Identifier</td>
+<td><strong id="verification-page-id"></strong></td>
+</tr>
+<tr>
+<td>Hash key</td>
+<td><strong id="verification-page-key"></strong></td>
+</tr>
+</tbody>
+</table>
+
+<h2>Users</h2>
+
+<table id="verification-page-users" class="table">
+<thead>
+<tr>
+<th>E-mail</th>
+<th>Identifier</th>
+<th>Roles</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+
+<h2>Files</h2>
+
+<table id="verification-page-files" class="table">
+<thead>
+<tr>
+<th>Name</th>
+<th>Hash</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+
+<div class="container-fluid">
+<div class="row">
+<div class="col" style="padding: 0;">
+<h2>Events</h2>
+</div>
+<div class="col-3 text-right" style="padding: 0;">
+
+<select class="selectpicker" id="verification-page-filter" multiple></select>
+
+</div>
+</div>
+</div>
+
+<table id="verification-page-events" class="table">
+<thead>
+<tr>
+<th>#</th>
+<th>Type</th>
+<th>Date</th>
+<th>Transaction</th>
+<th></th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+
+</div>
+
+</main>
+
+<footer class="footer">
+<div class="container">
+<span class="text-muted">Copyright © 2020 - 2021 SI-Consulting sp. z o.o.</span>
+<a href="https://github.com/NewTechHub/si-sign-verification-tool" class="float-right github-link" title="View the source code on GitHub" taget="_blank"><img src="./img/github-mark.png" alt="GitHub"></a>
+</div>
+</footer>
+
+</body>
+</html>
